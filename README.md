@@ -3,4 +3,4 @@
 
 NOT FOR Production
 
-Getting an enviroment ready to procees with : https://anywhere.eks.amazonaws.com/docs/getting-started/local-environment/
+Getting an enviroment ready to proceed with : https://anywhere.eks.amazonaws.com/docs/getting-started/local-environment/

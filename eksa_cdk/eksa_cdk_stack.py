@@ -11,7 +11,7 @@ from aws_cdk import (
 
 
 
-class EksaCdkPythonStack(Stack):
+class EksaCdkStack(Stack):
     def __init__(self, scope: Construct, id: str, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
 
@@ -32,7 +32,7 @@ class EksaCdkPythonStack(Stack):
 
 
         instance = ec2.Instance(self, "DemoInstance",
-            instance_type=ec2.InstanceType("t3a.2xlarge"),
+            instance_type=ec2.InstanceType("t3a.large"),
             machine_image=ec2.MachineImage.latest_amazon_linux(generation=ec2.AmazonLinuxGeneration.AMAZON_LINUX,
                                                               edition=ec2.AmazonLinuxEdition.STANDARD,
                                                               virtualization=ec2.AmazonLinuxVirt.HVM,

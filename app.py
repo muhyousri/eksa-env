@@ -4,10 +4,10 @@ import os
 import aws_cdk as cdk
 
 
-from eksa_cdk_python.eksa_cdk_python_stack import EksaCdkPythonStack
+from eksa_cdk.eksa_cdk_stack import EksaCdkStack
 
 
 app = cdk.App()
-EksaCdkPythonStack(app, "EksaCdkPythonStack",
+EksaCdkStack(app, "EksaCdkStack",
     )
 app.synth()

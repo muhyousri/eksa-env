@@ -21,11 +21,39 @@ class EksaCdkPythonStack(Stack):
         userdata.add_commands(str(userdata_file, 'utf-8'))
 
 
-        SSMcontent = {
+        vpc = ec2.Vpc(self, "VPC",
+        nat_gateways=0,
+        subnet_configuration=[ec2.SubnetConfiguration(name="demo",cidr_mask=24,subnet_type=ec2.SubnetType.PUBLIC)]
+        )
+
+        
+        role = iam.Role(self, "Role", assumed_by=iam.ServicePrincipal("ec2.amazonaws.com"))
+        role.add_managed_policy(iam.ManagedPolicy.from_aws_managed_policy_name("AmazonSSMManagedInstanceCore"))
+
+
+        instance = ec2.Instance(self, "DemoInstance",
+            instance_type=ec2.InstanceType("t3a.2xlarge"),
+            machine_image=ec2.MachineImage.latest_amazon_linux(generation=ec2.AmazonLinuxGeneration.AMAZON_LINUX,
+                                                              edition=ec2.AmazonLinuxEdition.STANDARD,
+                                                              virtualization=ec2.AmazonLinuxVirt.HVM,
+                                                              storage=ec2.AmazonLinuxStorage.GENERAL_PURPOSE),
+            vpc = vpc,
+            role = role,
+            user_data=userdata,
+            instance_name = envTagName ,
+            block_devices=[ec2.BlockDevice(
+            device_name="/dev/xvda",
+            volume=ec2.BlockDeviceVolume.ebs(50)
+            )
+            ]
+        )
+
+        cfn_document = ssm.CfnDocument(self, "Document", document_type="Command", name="SSMRunCommand",
+             content= {
                 "schemaVersion": '2.2',
                 "mainSteps": [
                   {
-                    "action": 'aws:runDocument',
+                    "action": "aws:runDocument",
                     "name": 'Install_Docker',
                     "inputs": {
                       "documentType": 'SSMDocument',
@@ -84,44 +112,11 @@ class EksaCdkPythonStack(Stack):
                         }
                         ]
                         }
-        
-
-        SSM_json = json.dumps(SSMcontent)
-
-
-        vpc = ec2.Vpc(self, "VPC",
-        nat_gateways=0,
-        subnet_configuration=[ec2.SubnetConfiguration(name="demo",cidr_mask=24,subnet_type=ec2.SubnetType.PUBLIC)]
-        )
-
-        
-        role = iam.Role(self, "Role", assumed_by=iam.ServicePrincipal("ec2.amazonaws.com"))
-        role.add_managed_policy(iam.ManagedPolicy.from_aws_managed_policy_name("AmazonSSMManagedInstanceCore"))
-
-
-        instance = ec2.Instance(self, "DemoInstance",
-            instance_type=ec2.InstanceType("t3a.2xlarge"),
-            machine_image=ec2.MachineImage.latest_amazon_linux(generation=ec2.AmazonLinuxGeneration.AMAZON_LINUX,
-                                                              edition=ec2.AmazonLinuxEdition.STANDARD,
-                                                              virtualization=ec2.AmazonLinuxVirt.HVM,
-                                                              storage=ec2.AmazonLinuxStorage.GENERAL_PURPOSE),
-            vpc = vpc,
-            role = role,
-            user_data=userdata,
-            instance_name = envTagName ,
-            block_devices=[ec2.BlockDevice(
-            device_name="/dev/xvda1",
-            volume=ec2.BlockDeviceVolume.ebs(50)
-            )
-            ]
-        )
-
-        cfn_document = ssm.CfnDocument(self, "Document",document_type="command", name="SSMRunCommand", content=SSM_json
               
         )
 
         cfn_association = ssm.CfnAssociation(self, "MyCfnAssociation",
-            name="SSMRunCommand.ref",
+            name= cfn_document.ref ,
             targets=[ssm.CfnAssociation.TargetProperty(
             key="tag:Name",
             values=[envTagName]
